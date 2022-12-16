@@ -1,0 +1,58 @@
+#include <Arduino.h>
+#include <canbus/can.h>
+
+// 左右のモータのID
+#define LEFT_MOTOR_ID 0x01
+#define RIGHT_MOTOR_ID 0x02
+
+// 前身・後進のPWM値
+#define FORWARD_PWM 150
+#define BACKWARD_PWM -150
+
+// 左右旋回のPWM値
+#define LEFT_TURN_PWM 100
+#define RIGHT_TURN_PWM -100
+
+// モータの制御を行う関数
+void controlMotor(uint8_t motor_id, int16_t pwm_value){
+  // モータへの送信データの用意
+  can_frame_t tx_frame;
+  tx_frame.id = motor_id; // モータのID (0x01 or 0x02)
+  tx_frame.dlc = 2; // データ長 2byte
+  tx_frame.data[0] = (uint8_t)(pwm_value >> 8); // モータのPWM値の上位8bit
+  tx_frame.data[1] = (uint8_t)(pwm_value & 0xFF); // モータのPWM値の下位8bit
+
+  // モータへの送信
+  can_send_frame(&tx_frame);
+}
+
+void setup() {
+  // CANの初期化
+  can_init(1000000); // 1Mbps
+
+  // モータの制御
+  controlMotor(LEFT_MOTOR_ID, FORWARD_PWM);
+  controlMotor(RIGHT_MOTOR_ID, FORWARD_PWM);
+}
+
+void loop() {
+  // 前進
+  controlMotor(LEFT_MOTOR_ID, FORWARD_PWM);
+  controlMotor(RIGHT_MOTOR_ID, FORWARD_PWM);
+  delay(1000);
+
+  // 後進
+  controlMotor(LEFT_MOTOR_ID, BACKWARD_PWM);
+  controlMotor(RIGHT_MOTOR_ID, BACKWARD_PWM);
+  delay(1000);
+
+  // 左旋回
+  controlMotor(LEFT_MOTOR_ID, LEFT_TURN_PWM);
+  controlMotor(RIGHT_MOTOR_ID, RIGHT_TURN_PWM);
+  delay(1000);
+
+  // 右旋回
+  controlMotor(LEFT_MOTOR_ID, RIGHT_TURN_PWM);
+  controlMotor(RIGHT_MOTOR_ID, LEFT_TURN_PWM);
+  delay(1000);
+}
