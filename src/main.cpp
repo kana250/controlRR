@@ -35,26 +35,26 @@ uint16_t BOTTOM_MOTOR_TORQUE = 0; // 下のギアを回すモータのトルク[
 
 
 void canSender(int motor_id, uint16_t angle_value, uint16_t pwm_value, uint16_t torque_value){
-    Serial.println("> CANデータを送信しています...");
+  Serial.println("> CANデータを送信しています...");
 
-    int length = 8; // データ長 8byte
-    uint8_t buffer[length];// 8byte分のバッファを用意 1byte(8bitの):16進数表記で0x00〜0xFF
-    // 例: uint8_t buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; <- このように，8byte分のデータを格納してる
+  int length = 8; // データ長 8byte
+  uint8_t buffer[length];// 8byte分のバッファを用意 1byte(8bitの):16進数表記で0x00〜0xFF
+  // 例: uint8_t buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; <- このように，8byte分のデータを格納してる
 
-    // 任意の角度，PWM値，トルク値をバッファに格納
-    buffer[0] = (uint8_t)(angle_value >> 8); // 角度の上位8bit
-    buffer[1] = (uint8_t)(angle_value & 0xFF); // 角度の下位8bit
-    buffer[2] = (uint8_t)(pwm_value >> 8); // PWM値の上位8bit
-    buffer[3] = (uint8_t)(pwm_value & 0xFF); // PWM値の下位8bit
-    buffer[4] = (uint8_t)(torque_value >> 8); // トルク値の上位8bit
-    buffer[5] = (uint8_t)(torque_value & 0xFF); // トルク値の下位8bit
-    // 6, 7byteはnull
+  // 任意の角度，PWM値，トルク値をバッファに格納
+  buffer[0] = (uint8_t)(angle_value >> 8); // 角度の上位8bit
+  buffer[1] = (uint8_t)(angle_value & 0xFF); // 角度の下位8bit
+  buffer[2] = (uint8_t)(pwm_value >> 8); // PWM値の上位8bit
+  buffer[3] = (uint8_t)(pwm_value & 0xFF); // PWM値の下位8bit
+  buffer[4] = (uint8_t)(torque_value >> 8); // トルク値の上位8bit
+  buffer[5] = (uint8_t)(torque_value & 0xFF); // トルク値の下位8bit
+  // 6, 7byteはnull
 
-    CAN.beginPacket(motor_id); // ID:11bitか29bitで指定する．どちらも,8byteまでのデータを送信できる．
-    CAN.write(buffer, length);
-    CAN.endPacket();
+  CAN.beginPacket(motor_id); // ID:11bitか29bitで指定する．どちらも,8byteまでのデータを送信できる．
+  CAN.write(buffer, length);
+  CAN.endPacket();
 
-    Serial.println("> CANデータを送信しました");
+  Serial.println("> CANデータを送信しました"); 
 }
 
 void setup() {
