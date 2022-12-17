@@ -6,7 +6,6 @@ PS4のコントローラで，RRを動作させるプログラム.
 足回りには，Differential Swerveを使っている．
 
 ## 1. MCP2551のピン配置 ([データシート](https://jp.rs-online.com/web/p/can-interface-ics/0402920))
----
 
 <img width="384" alt="スクリーンショット 2022-12-17 12 11 43" src="https://user-images.githubusercontent.com/43850587/208221322-1a95e337-437a-429b-8f23-7956d601a770.png">
 
@@ -22,12 +21,10 @@ PS4のコントローラで，RRを動作させるプログラム.
 | 8 | RS | スロープ抵抗入力 |
 
 ## 2. ESP32のピン配置([データシート](https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32_datasheet_en.pdf))
----
 
 ![image](https://user-images.githubusercontent.com/43850587/208221920-fbe68b1a-98ed-491c-98bb-495f8f95568a.png)
 
 ## 3. MCP2551とESP32の接続
----
 
 | MCP2551 | ESP32 |
 | :-------------: | :---: |
