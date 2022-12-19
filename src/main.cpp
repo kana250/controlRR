@@ -18,8 +18,8 @@
 */
 
 // 上下のギアを回すモータのID
-#define TOP_MOTOR_ID 0x201 // 上のギアを回すモータのID
-#define BOTTOM_MOTOR_ID 0x202 // 下のギアを回すモータのID
+#define TOP_MOTOR_ID 1 // 上のギアを回すモータのESC_ID
+#define BOTTOM_MOTOR_ID 2 // 下のギアを回すモータのESC_ID
 
 // MOTOR: ANGLE
 uint16_t TOP_MOTOR_ANGLE = 0; // 上のギアを回すモータの角度[0, 8191] 0 ~ 360°
@@ -33,28 +33,41 @@ uint16_t BOTTOM_MOTOR_PWM = 150; // 下のギアを回すモータのPWM値[0, 2
 uint16_t TOP_MOTOR_TORQUE = 0; // 上のギアを回すモータのトルク[0, ?]
 uint16_t BOTTOM_MOTOR_TORQUE = 0; // 下のギアを回すモータのトルク[0, ?]
 
+// MOTOR: CURRENT (-10000mA ~ 10000mA) -> -10A ~ 10A
+int16_t CURRENT_CW = 10E3; // 正転するモータの電流値[-10000, 10000]
+int16_t CURRENT_CCW = -10E3; // 反転するモータの電流値[-10000, 10000]
 
-void canSender(int motor_id, uint16_t angle_value, uint16_t pwm_value, uint16_t torque_value){
-  Serial.println("> CANデータを送信しています...");
+// モータのID, 制御電流値
+void canSender(uint16_t id, uint16_t current_value) {
+  // CANデータを送信
+  // モータID: 1〜4
 
   int length = 8; // データ長 8byte
   uint8_t buffer[length];// 8byte分のバッファを用意 1byte(8bitの):16進数表記で0x00〜0xFF
   // 例: uint8_t buffer[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; <- このように，8byte分のデータを格納してる
 
-  // 任意の角度，PWM値，トルク値をバッファに格納
-  buffer[0] = (uint8_t)(angle_value >> 8); // 角度の上位8bit
-  buffer[1] = (uint8_t)(angle_value & 0xFF); // 角度の下位8bit
-  buffer[2] = (uint8_t)(pwm_value >> 8); // PWM値の上位8bit
-  buffer[3] = (uint8_t)(pwm_value & 0xFF); // PWM値の下位8bit
-  buffer[4] = (uint8_t)(torque_value >> 8); // トルク値の上位8bit
-  buffer[5] = (uint8_t)(torque_value & 0xFF); // トルク値の下位8bit
-  // 6, 7byteはnull
+  // 任意の電流値をバッファに格納(モータのIDによって，バッファのどの位置に格納するかを変える)
+  buffer[0 + (id - 1) * 2] = (current_value >> 8) & 0xFF; // 0byte目に，current_valueの上位8bitを格納
+  buffer[1 + (id - 1) * 2] = current_value & 0xFF; // 1byte目に，current_valueの下位8bitを格納 
 
-  CAN.beginPacket(motor_id); // ID:11bitか29bitで指定する．どちらも,8byteまでのデータを送信できる．
+  /*
+    * 上記の「current_value & 0xFF」の説明
+    * まず，16進数の0xFFは，2進数で表すと11111111となる．つまり，1が8個並んでる8bitの値である．
+    * 
+    * そして，current_valueは，16bitの値である．
+    * 例えば，current_value = 0x1234とすると，2進数で表すと1001000110100となる．
+    * 
+    * このとき，「current_value & 0xFF」は，2進数で表すと「1001000110100 & 0000000011111111」となる．
+    * つまり，current_valueの下位8bitを取り出すことができる．（＆はAND演算子の意味である） 
+  */
+
+  // CAN.beginPacket():11bitか29bitで指定する．
+  CAN.beginPacket(0x200); // 0x200
   CAN.write(buffer, length);
   CAN.endPacket();
 
-  Serial.println("> CANデータを送信しました"); 
+  // デバッグ用
+  Serial.println("> [CAN] ID:" + String(id) + ", " + String(current_value) + "mA");
 }
 
 void setup() {
@@ -65,16 +78,17 @@ void setup() {
     Serial.println("> CAN通信の接続に失敗しました");
     while (1);
   }
+  Serial.println("> CAN通信の接続に成功しました");
 
   CAN.setPins(rx, tx); // CRX, CTX
 }
 
 void loop() {
   // 上のギアを回すモータのCANデータを送信
-  canSender(TOP_MOTOR_ID, 0, TOP_MOTOR_PWM, 0);
+  canSender(TOP_MOTOR_ID, CURRENT_CW); // 正転（10A）
 
   // 下のギアを回すモータのCANデータを送信
-  canSender(BOTTOM_MOTOR_ID, 0, BOTTOM_MOTOR_PWM, 0);
+  canSender(BOTTOM_MOTOR_ID, CURRENT_CCW); // 反転（-10A）
 
   // 1秒待つ
   delay(1000); 
