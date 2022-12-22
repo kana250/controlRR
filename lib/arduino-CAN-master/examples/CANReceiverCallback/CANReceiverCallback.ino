@@ -27,28 +27,28 @@ void onReceive(int packetSize) {
   // received a packet
   Serial.print("Received ");
 
-  if (CAN.packetExtended()) {
-    Serial.print("extended ");
+  if (CAN.packetExtended()) { // 意味は，CAN packetのIDが拡張IDかどうかを判定する．
+    Serial.print("extended "); // 拡張IDの場合，extendedと表示する．
   }
 
-  if (CAN.packetRtr()) {
+  if (CAN.packetRtr()) { // 意味は，CAN packetがRTRかどうかを判定する．
     // Remote transmission request, packet contains no data
-    Serial.print("RTR ");
+    Serial.print("RTR "); // RTRとは，リモート送信要求のこと．
   }
 
-  Serial.print("packet with id 0x");
-  Serial.print(CAN.packetId(), HEX);
+  Serial.print("packet with id 0x"); // CAN packetのIDを表示する．
+  Serial.print(CAN.packetId(), HEX); // CAN packetのIDを16進数で表示する．
 
-  if (CAN.packetRtr()) {
-    Serial.print(" and requested length ");
-    Serial.println(CAN.packetDlc());
-  } else {
+  if (CAN.packetRtr()) { // CAN packetがRTRの場合，以下の処理を行う．
+    Serial.print(" and requested length "); 
+    Serial.println(CAN.packetDlc()); // CAN packetのDLCを表示する．(DLCは，データ長を表す．)
+  } else { // CAN packetがRTRでない場合，以下の処理を行う．
     Serial.print(" and length ");
-    Serial.println(packetSize);
+    Serial.println(packetSize); // CAN packetのサイズを表示する．
 
-    // only print packet data for non-RTR packets
+    // only print packet data for non-RTR packets // RTRでない場合，CAN packetのデータを表示する．
     while (CAN.available()) {
-      Serial.print((char)CAN.read());
+      Serial.print((char)CAN.read()); // CAN packetのデータを1byteずつ読み込み，char型に変換して表示する．
     }
     Serial.println();
   }

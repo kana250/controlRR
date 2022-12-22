@@ -5,7 +5,7 @@ PS4のコントローラで，RRを動作させるプログラム.
 
 足回りには，Differential Swerveを使っている．
 
-## 1. MCP2551のピン配置 ([データシート](https://jp.rs-online.com/web/p/can-interface-ics/0402920))
+## 1. MCP2562のピン配置 ([データシート](https://jp.rs-online.com/web/p/can-interface-ics/0402920))
 
 <img width="384" alt="スクリーンショット 2022-12-17 12 11 43" src="https://user-images.githubusercontent.com/43850587/208221322-1a95e337-437a-429b-8f23-7956d601a770.png">
 

@@ -34,10 +34,10 @@ uint16_t TOP_MOTOR_TORQUE = 0; // 上のギアを回すモータのトルク[0, 
 uint16_t BOTTOM_MOTOR_TORQUE = 0; // 下のギアを回すモータのトルク[0, ?]
 
 // MOTOR: CURRENT (-10000mA ~ 10000mA) -> -10A ~ 10A
-int16_t CURRENT_CW = 10E3; // 正転するモータの電流値[-10000, 10000]
-int16_t CURRENT_CCW = -10E3; // 反転するモータの電流値[-10000, 10000]
+int16_t CURRENT_CW = 7E3; // 正転するモータの電流値[-10000, 10000]
+int16_t CURRENT_CCW = -5E3; // 反転するモータの電流値[-10000, 10000]
 
-// モータのID, 制御電流値
+// CANデータを送信
 void canSender(uint16_t id, uint16_t current_value) {
   // CANデータを送信
   // モータID: 1〜4
@@ -64,10 +64,19 @@ void canSender(uint16_t id, uint16_t current_value) {
   // CAN.beginPacket():11bitか29bitで指定する．
   CAN.beginPacket(0x200); // 0x200
   CAN.write(buffer, length);
-  CAN.endPacket();
+  if (CAN.endPacket()){
+    Serial.println("> [CAN] ID:" + String(id) + ", " + String(current_value) + "mA");
+  }else{
+    Serial.println("> [CAN] ID:" + String(id) + ", " + String(current_value) + "mA, 送信失敗");
+  }
+}
 
-  // デバッグ用
-  Serial.println("> [CAN] ID:" + String(id) + ", " + String(current_value) + "mA");
+// CANデータを受信
+void canReceiver(uint16_t id){
+  if (CAN.available()){
+    // 受信データをビットで表示
+    Serial.println("[受信データ] " + String(CAN.read(), BIN));
+  }
 }
 
 void setup() {
@@ -88,8 +97,18 @@ void loop() {
   canSender(TOP_MOTOR_ID, CURRENT_CW); // 正転（10A）
 
   // 下のギアを回すモータのCANデータを送信
-  canSender(BOTTOM_MOTOR_ID, CURRENT_CCW); // 反転（-10A）
+  //canSender(BOTTOM_MOTOR_ID, CURRENT_CCW); // 反転（-10A）
 
-  // 1秒待つ
-  delay(1000); 
+  if (CAN.parsePacket()){
+    Serial.println("> [CAN] 受信成功");
+    long packet_id = CAN.packetId();
+    Serial.println("> [CAN] packet_ID:" + String(packet_id, BIN));
+    if (packet_id & 0x7ff == TOP_MOTOR_ID){
+      canReceiver(TOP_MOTOR_ID);
+    }
+    //canReceiver(BOTTOM_MOTOR_ID);
+  }else{
+    Serial.println("> [CAN] 受信失敗");
+  }
+
 }
