@@ -21,24 +21,24 @@
 #define TOP_MOTOR_ID 1 // 上のギアを回すモータのESC_ID
 #define BOTTOM_MOTOR_ID 2 // 下のギアを回すモータのESC_ID
 
-// MOTOR: ANGLE
-uint16_t TOP_MOTOR_ANGLE = 0; // 上のギアを回すモータの角度[0, 8191] 0 ~ 360°
-uint16_t BOTTOM_MOTOR_ANGLE = 0; // 下のギアを回すモータの角度[0, 8191] 0 ~ 360°
+// // MOTOR: ANGLE
+// uint16_t TOP_MOTOR_ANGLE = 0; // 上のギアを回すモータの角度[0, 8191] 0 ~ 360°
+// uint16_t BOTTOM_MOTOR_ANGLE = 0; // 下のギアを回すモータの角度[0, 8191] 0 ~ 360°
 
-// MOTOR: PWM
-uint16_t TOP_MOTOR_PWM = 150; // 上のギアを回すモータのPWM値[0, 255] 0 ~ 100%
-uint16_t BOTTOM_MOTOR_PWM = 150; // 下のギアを回すモータのPWM値[0, 255] 0 ~ 100%
+// // MOTOR: PWM
+// uint16_t TOP_MOTOR_PWM = 150; // 上のギアを回すモータのPWM値[0, 255] 0 ~ 100%
+// uint16_t BOTTOM_MOTOR_PWM = 150; // 下のギアを回すモータのPWM値[0, 255] 0 ~ 100%
 
-// MOTOR: TORQUE
-uint16_t TOP_MOTOR_TORQUE = 0; // 上のギアを回すモータのトルク[0, ?]
-uint16_t BOTTOM_MOTOR_TORQUE = 0; // 下のギアを回すモータのトルク[0, ?]
+// // MOTOR: TORQUE
+// uint16_t TOP_MOTOR_TORQUE = 0; // 上のギアを回すモータのトルク[0, ?]
+// uint16_t BOTTOM_MOTOR_TORQUE = 0; // 下のギアを回すモータのトルク[0, ?]
 
 // MOTOR: CURRENT (-10000mA ~ 10000mA) -> -10A ~ 10A
 int16_t CURRENT_CW = 7E3; // 正転するモータの電流値[-10000, 10000]
-int16_t CURRENT_CCW = -5E3; // 反転するモータの電流値[-10000, 10000]
+int16_t CURRENT_CCW = -7E3; // 反転するモータの電流値[-10000, 10000]
 
 // CANデータを送信
-void canSender(uint16_t id, uint16_t current_value) {
+void canSender(uint16_t id, int16_t current_value) {
   // CANデータを送信
   // モータID: 1〜4
 
@@ -95,20 +95,28 @@ void setup() {
 void loop() {
   // 上のギアを回すモータのCANデータを送信
   canSender(TOP_MOTOR_ID, CURRENT_CW); // 正転（10A）
-
+  delay(500);
   // 下のギアを回すモータのCANデータを送信
-  //canSender(BOTTOM_MOTOR_ID, CURRENT_CCW); // 反転（-10A）
+  canSender(BOTTOM_MOTOR_ID, CURRENT_CCW); // 反転（-10A）
+  delay(500);
 
-  if (CAN.parsePacket()){
-    Serial.println("> [CAN] 受信成功");
-    long packet_id = CAN.packetId();
-    Serial.println("> [CAN] packet_ID:" + String(packet_id, BIN));
-    if (packet_id & 0x7ff == TOP_MOTOR_ID){
-      canReceiver(TOP_MOTOR_ID);
-    }
-    //canReceiver(BOTTOM_MOTOR_ID);
-  }else{
-    Serial.println("> [CAN] 受信失敗");
-  }
+  /* 
+    * 受信データの確認
+    * 送信と受信を同時に行うと，受信データが正しく取得できないことがあるため，
+    * コメントアウトしておく↓
+  */
+
+  // if (CAN.parsePacket()){
+  //   long packet_id = CAN.packetId();
+  //   Serial.println("> [CAN] 受信成功 packet_ID:" + String(packet_id & 0x7ff, HEX));
+  //   if (packet_id & 0x7ff == 0x200 + TOP_MOTOR_ID){
+  //     canReceiver(TOP_MOTOR_ID);
+  //   }
+  //   if (packet_id & 0x7ff == 0x200 + BOTTOM_MOTOR_ID){
+  //     canReceiver(BOTTOM_MOTOR_ID);
+  //   }
+  // }else{
+  //   Serial.println("> [CAN] 受信失敗");
+  // }
 
 }
